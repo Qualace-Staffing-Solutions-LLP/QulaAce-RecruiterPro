@@ -44,6 +44,9 @@ function AdminHome() {
   const [searchValue, setSearchValue] = useState("");
   const [showSearchLeads, setshowSearchLeads] = useState(false);
   const [showAddLeads, setshowAddLeadsForm] = useState(false);
+  const [showSendTask, setshowSendTask] = useState(false);
+  const [taskRecruiterId, setTaskRecruiterId] = useState('');
+  const [taskLeadId, setTaskLeadId] = useState('');
   const [leadData, setLeadData] = useState(null); 
   const [activeCount, setActiveCount] = useState(0);
 const [inactiveCount, setInactiveCount] = useState(0);
@@ -92,12 +95,29 @@ const [clientDistribution, setClientDistribution] = useState([]); // for Client 
       "Patna",
     ];
 
+
+    useEffect(() => {
+      const fetchPendingLeads = async () => {
+        try {
+          const res = await axios.get('http://localhost:5000/api/leads/pending-leads');
+          console.log("Pending leads data:", res.data);
+          setPendingLeads(res.data);
+        } catch (err) {
+          console.error("Error fetching pending leads:", err);
+        }
+      };
+    
+      if (showPendingLeads) {
+        fetchPendingLeads();
+      }
+    }, [showPendingLeads]);
+
     
 
     useEffect(() => {
       const fetchDashboardStats = async () => {
         try {
-          const res = await axios.get("https://qualace-recruitpro.onrender.com/api/leads/dashboard-stats");
+          const res = await axios.get("http://localhost:5000/api/leads/dashboard-stats");
           const { active, inactive, pending, recruiters, timeline } = res.data;
     
           setActiveCount(active);
@@ -120,7 +140,7 @@ const [clientDistribution, setClientDistribution] = useState([]); // for Client 
     
       const fetchClientDistribution = async () => {
         try {
-          const res = await axios.get("https://qualace-recruitpro.onrender.com/api/clients/lead-distribution");
+          const res = await axios.get("http://localhost:5000/api/clients/lead-distribution");
           setClientDistribution(res.data);
         } catch (error) {
           console.error("Client distribution fetch error:", error);
@@ -169,7 +189,7 @@ const [clientDistribution, setClientDistribution] = useState([]); // for Client 
 
 
   // Sidebar menu items
-  const menuItems = ["Add Leads", "Search Lead", "Pending Leads", "Search Recruiter" , "Add Recruiter", "Update Recruiter", "Delete Recruiter", "Recruiters", "Clients", "Chat", "Profile"];
+  const menuItems = ["Send Task","Add Leads", "Search Lead", "Pending Leads", "Search Recruiter" , "Add Recruiter", "Update Recruiter", "Delete Recruiter", "Recruiters", "Clients", "Chat", "Profile"];
 
   
   
@@ -189,7 +209,7 @@ const [clientDistribution, setClientDistribution] = useState([]); // for Client 
     }
   
     try {
-      const response = await axios.post("https://qualace-recruitpro.onrender.com/api/users/create", formData);
+      const response = await axios.post("http://localhost:5000/api/users/create", formData);
   
       if (response.status === 200 || response.status === 201) {
         alert("User created successfully✅");
@@ -216,6 +236,30 @@ const [clientDistribution, setClientDistribution] = useState([]); // for Client 
   };
 
   
+  const handleSendTask = async () => {
+    if (!taskRecruiterId || !taskLeadId) {
+      alert("Please fill both Recruiter ID and Lead ID.");
+      return;
+    }
+  
+    try {
+      const res = await axios.post('http://localhost:5000/api/admin/send-task', {
+        recruiterId: taskRecruiterId,
+        leadId: taskLeadId,
+      });
+  
+      if (res.data.success) {
+        alert("✅ Task assigned successfully!");
+        setTaskLeadId('');
+        setTaskRecruiterId('');
+      } else {
+        alert(res.data.message || "Failed to assign task.");
+      }
+    } catch (err) {
+      console.error("Send Task Error:", err);
+      alert("❌ Server error. Failed to send task.");
+    }
+  };
   
 
   
@@ -227,7 +271,7 @@ const [clientDistribution, setClientDistribution] = useState([]); // for Client 
       // Only include password if it's not empty
       const payload = password ? { ...updateData, password } : updateData;
   
-      const response = await fetch(`https://qualace-recruitpro.onrender.com/api/users/${formData.recruiterId}`, {
+      const response = await fetch(`http://localhost:5000/api/users/${formData.recruiterId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -264,7 +308,7 @@ const [clientDistribution, setClientDistribution] = useState([]); // for Client 
     }
   
     try {
-      const response = await fetch(`https://qualace-recruitpro.onrender.com/api/users/${recruiterId}`, {
+      const response = await fetch(`http://localhost:5000/api/users/${recruiterId}`, {
         method: "DELETE",
       });
   
@@ -288,7 +332,7 @@ const [clientDistribution, setClientDistribution] = useState([]); // for Client 
     }
   
     try {
-      const response = await fetch(`https://qualace-recruitpro.onrender.com/api/users/search?criteria=${searchCriteria}&value=${searchValue}`);
+      const response = await fetch(`http://localhost:5000/api/users/search?criteria=${searchCriteria}&value=${searchValue}`);
       const data = await response.json();
   
       if (response.ok) {
@@ -345,27 +389,14 @@ const [clientDistribution, setClientDistribution] = useState([]); // for Client 
   
 
   
-  useEffect(() => {
-    const fetchPendingLeads = async () => {
-      try {
-        const res = await axios.get("https://qualace-recruitpro.onrender.com/api/leads/pending-leads");
-        console.log("Pending leads data:", res.data);
-        setPendingLeads(res.data);
-      } catch (err) {
-        console.error("Error fetching pending leads:", err);
-      }
-    };
   
-    if (showPendingLeads) {
-      fetchPendingLeads();
-    }
-  }, [showPendingLeads]);
+  
   
   
 
 const handleClientDetails = async () => {
   try {
-    const response = await fetch("https://qualace-recruitpro.onrender.com/api/clients/all");
+    const response = await fetch("http://localhost:5000/api/clients/all");
     const data = await response.json();
 
     if (response.ok) {
@@ -386,7 +417,7 @@ const SearchLead = async () => {
   }
 
   try {
-    const response = await fetch("https://qualace-recruitpro.onrender.com/api/admin/search-leads", {
+    const response = await fetch("http://localhost:5000/api/admin/search-leads", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -409,7 +440,7 @@ const SearchLead = async () => {
 
 const getRecruiters = async () => {
   try {
-    const response = await fetch('https://qualace-recruitpro.onrender.com/api/users/recruiters'); // Update the URL as per your backend
+    const response = await fetch('http://localhost:5000/api/users/recruiters'); // Update the URL as per your backend
     const data = await response.json();
     setRecruiters(data); // Make sure you define this state
   } catch (error) {
@@ -430,7 +461,7 @@ const handleLeadsUpload = async (e) => {
   formData.append("file", leadsFile);
 
   try {
-    const response = await fetch("https://qualace-recruitpro.onrender.com/api/leads/bulk-upload", {
+    const response = await fetch("http://localhost:5000/api/leads/bulk-upload", {
       method: "POST",
       body: formData,
     });
@@ -584,6 +615,20 @@ const handleLeadsUpload = async (e) => {
       setshowSearchLeads(false);
       setshowRecruiterdetails(false);
       setShowAnalysis(true);
+    }    
+    if (option === "Send Task") {
+      setshowDeleteForm(false);
+      setshowUpdateForm(false);
+      setshowAddForm(false);
+      setshowSearchForm(false);
+      setshowAddLeadsForm(false);
+      setshowPendingLeads(false);
+      setshowclientdetails(false);
+      setLeadData(null);
+      setshowSearchLeads(false);
+      setshowRecruiterdetails(false);
+      setShowAnalysis(false);
+      setshowSendTask(true);
     }    
   };
 
@@ -1325,6 +1370,39 @@ const handleLeadsUpload = async (e) => {
     </div>
   </div>
 )}
+
+
+{/* Send Task */}
+{showSendTask && (
+  <div className="mt-6 bg-white p-6 rounded shadow w-full max-w-md mx-auto">
+    <h2 className="text-xl font-bold mb-4 text-center text-gray-800">📝 Assign Task to Recruiter</h2>
+
+    <div className="space-y-4">
+      <input
+        type="text"
+        placeholder="Recruiter ID"
+        value={taskRecruiterId}
+        onChange={(e) => setTaskRecruiterId(e.target.value)}
+        className="w-full border border-gray-300 rounded px-4 py-2"
+      />
+      <input
+        type="text"
+        placeholder="Lead ID"
+        value={taskLeadId}
+        onChange={(e) => setTaskLeadId(e.target.value)}
+        className="w-full border border-gray-300 rounded px-4 py-2"
+      />
+
+      <button
+        onClick={handleSendTask}
+        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+      >
+        Send Task
+      </button>
+    </div>
+  </div>
+)}
+
 
 
                 
