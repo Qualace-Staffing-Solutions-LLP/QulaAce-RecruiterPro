@@ -1058,6 +1058,7 @@ const handleLeadsUpload = async (e) => {
         <table className="min-w-[1000px] border-collapse bg-white">
           <thead className="bg-gray-100 sticky top-0 z-10">
             <tr>
+              <th className="border border-gray-300 px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Lead Id</th>
               <th className="border border-gray-300 px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Name</th>
               <th className="border border-gray-300 px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Phone</th>
               <th className="border border-gray-300 px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Email</th>
@@ -1072,6 +1073,7 @@ const handleLeadsUpload = async (e) => {
           <tbody>
             {pendingLeads.map((lead) => (
               <tr key={lead._id} className="hover:bg-gray-50 transition duration-200">
+                <td className="border border-gray-300 px-6 py-4 text-sm text-gray-800 whitespace-nowrap">{lead._id}</td>
                 <td className="border border-gray-300 px-6 py-4 text-sm text-gray-800 whitespace-nowrap">{lead.candidate_name}</td>
                 <td className="border border-gray-300 px-6 py-4 text-sm text-gray-800 whitespace-nowrap">{lead.phone_number}</td>
                 <td className="border border-gray-300 px-6 py-4 text-sm text-gray-800 whitespace-nowrap">{lead.email}</td>
